@@ -8,9 +8,13 @@ O foco do trabalho **não é a aplicação em si**: o código do sistema de exem
 
 ## Grupo
 
-Levi, David, Henrique, Carlos, Angelo e Jetro (6 integrantes).
+Levi, David, Henrique, Carlos, Angelo, Jetro e Malaquias (7 integrantes).
 
 A divisão completa das tarefas — quem faz o quê, critérios de aceite e dependências — está em [`docs/divisao-tarefas.md`](docs/divisao-tarefas.md), e o andamento é acompanhado no [Project do GitHub](https://github.com/users/lfariazzz/projects/3).
+
+## Estado atual
+
+A branch `develop` já contém o walking skeleton do projeto: backend FastAPI com `/health`, frontend React/Vite, as quatro regras de negócio isoladas, Dockerfiles e Docker Compose. A configuração dos hooks de pre-commit ainda está em correção para concluir integralmente a Fase 0.
 
 ## Aplicação de exemplo
 
@@ -45,6 +49,17 @@ repo/
     └── referencias.md          # bibliografia (documentação oficial das ferramentas)
 ```
 
+## Como executar a versão atual
+
+Com Docker e Docker Compose instalados:
+
+```bash
+git switch develop
+docker compose up --build
+```
+
+O frontend fica disponível em <http://localhost:5173> e o healthcheck do backend em <http://localhost:8000/health>. Para encerrar e remover os contêineres, execute `docker compose down`.
+
 ## Desenho da pipeline
 
 ### CI (Continuous Integration)
@@ -72,4 +87,4 @@ repo/
 - Full-stack com jobs paralelos e path filtering mostra domínio de pipeline mais avançado que um pipeline linear simples
 - Múltiplas camadas de teste (unitário, integração, E2E) atende diretamente ao critério de "qualidade técnica do experimento" da avaliação
 - Segurança (auditoria de dependências e scan de imagem) e eficiência (cache, estratégia de tags) entraram como conteúdo genuíno de pipeline — substituindo tasks que inicialmente seriam "escrever a aplicação", fora do foco do trabalho
-- Escopo foi calibrado para ser **executável por um grupo de 6 pessoas em um semestre** sem comprometer a qualidade
+- Escopo foi calibrado para ser **executável por um grupo de 7 pessoas em um semestre** sem comprometer a qualidade
