@@ -1,15 +1,15 @@
 # Evidências das tasks C1 e C2 - Carlos
 
 Este documento registra o estado das tasks de quality gate, demonstração de bug,
-CI do frontend e branch protection. Os dados foram conferidos em 16/08/2026, antes
-da configuração administrativa das regras de proteção.
+CI do frontend e branch protection. Os dados foram conferidos em 16/08/2026 após a
+configuração administrativa das regras de proteção.
 
 ## Resumo executivo
 
 | Task | Entrega técnica | Evidência | Estado |
 |---|---|---|---|
-| C1 | Quality gate de 75% no backend e roteiro da demonstração | PR #28 verde e PR #30 vermelho | Implementação concluída; bloqueio administrativo pendente |
-| C2 | CI do frontend com instalação, lint, teste e build | PR #29 verde | Workflow concluído; proteção final da `main` depende do administrador e do E2E |
+| C1 | Quality gate de 75% no backend e roteiro da demonstração | PR #28 verde e PR #30 bloqueado | Concluída |
+| C2 | CI do frontend com instalação, lint, teste e build | PR #29 verde e ruleset da `main` ativo | Parte do Carlos concluída; falta o check E2E da J2 |
 
 As alterações corretas foram incorporadas apenas em `develop`. O bug proposital está
 isolado na branch `demo/bug-limite-desconto` e nunca deve ser mergeado.
@@ -42,8 +42,8 @@ que o gate funciona.
 ### Evidência de reprovação
 
 - [PR #30 - bug proposital](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/pull/30)
-- [Check Backend quality gate reprovado](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/31921757934/job/95102593873)
-- [Check Frontend CI aprovado no mesmo PR](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/31921757922/job/95102593869)
+- [Check Backend quality gate reprovado](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/31962503071/job/95202522146)
+- [Check Frontend CI aprovado no mesmo PR](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/31962503068/job/95202522365)
 
 O PR #30 altera somente uma comparação:
 
@@ -55,6 +55,13 @@ O PR #30 altera somente uma comparação:
 No subtotal exato de R$ 200,00, o código com bug retorna desconto zero, enquanto o
 teste espera R$ 20,00. O backend reprova e o frontend permanece verde, mostrando que
 os pipelines são independentes.
+
+### Evidência do bloqueio administrativo
+
+![PR #30 com o backend reprovado, o frontend aprovado e o merge bloqueado](evidencias/carlos/C1-05-merge-bloqueado.jpeg)
+
+O print comprova simultaneamente que os dois checks são obrigatórios e que o GitHub
+desabilitou o merge por causa da falha do backend.
 
 ## C2 - CI do frontend e branch protection
 
@@ -78,50 +85,23 @@ os pipelines são independentes.
 O PR comprovou que `npm ci`, lint, teste e build terminam com sucesso no GitHub
 Actions.
 
-## Estado antes da configuração administrativa
+## Estado após a configuração administrativa
 
 Na data deste registro:
 
-- `main` não está protegida.
-- `develop` não está protegida.
-- O autor das tasks possui permissão de escrita, mas não permissão administrativa.
-- O PR #30 está com o backend vermelho e o frontend verde.
-- O PR #30 ainda é tecnicamente mergeável porque não existe um ruleset obrigatório.
-- O workflow E2E da J2 ainda não existe em `develop`.
+- o ruleset [Proteção temporária da develop](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/rules/20913430) está ativo;
+- o ruleset [Proteção da main](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/rules/20913489) está ativo;
+- ambos exigem pull request, branch atualizada e os checks `Backend quality gate` e
+  `Frontend CI`;
+- ambos impedem exclusão e force push das branches protegidas;
+- o PR #30 está com o backend vermelho, o frontend verde e o merge bloqueado;
+- o autor das tasks possui permissão de escrita, mas não permissão administrativa;
+- o workflow E2E da J2 ainda não existe em `develop`.
 
-Assim, a automação já detecta o erro, mas o GitHub ainda não impede administrativamente
-o clique em merge. Essa última etapa depende do administrador do repositório.
-
-## O que o administrador deve fazer agora
-
-### Proteção temporária para concluir a demonstração
-
-1. Acessar `Settings` > `Rules` > `Rulesets`.
-2. Criar um branch ruleset chamado `Proteção temporária da develop`.
-3. Definir o status como `Active`.
-4. Selecionar `develop` como branch alvo.
-5. Habilitar `Require a pull request before merging`.
-6. Habilitar `Require status checks to pass`.
-7. Habilitar `Require branches to be up to date before merging`.
-8. Adicionar os checks obrigatórios `Backend quality gate` e `Frontend CI`.
-9. Bloquear force pushes e exclusão da branch.
-10. Salvar o ruleset.
-11. Atualizar o PR #30 e confirmar que o merge aparece bloqueado.
-
-Depois dessa confirmação, deve ser feito um print da mensagem de bloqueio. O PR #30
-deve permanecer sem merge e pode ser convertido em draft até a apresentação.
-
-### Proteção definitiva da main
-
-Depois que a J2 publicar e executar o workflow `e2e.yml`, o administrador deve criar
-ou atualizar um ruleset para `main` exigindo:
-
-- `Backend quality gate`;
-- `Frontend CI`;
-- o nome real do check E2E reportado pelo primeiro workflow da J2.
-
-A proteção definitiva também deve exigir pull request, branch atualizada, bloquear
-force push e impedir exclusão da `main`.
+Com isso, todos os critérios da C1 foram atendidos. Na C2, o workflow do frontend e a
+parte da proteção que dependiam do Carlos também foram concluídos. A única pendência é
+externa: depois que a J2 publicar e executar o workflow `e2e.yml`, o administrador deve
+adicionar ao ruleset da `main` o nome exato do check E2E reportado pelo GitHub Actions.
 
 ## Prints que devem ser guardados
 
@@ -130,14 +110,14 @@ force push e impedir exclusão da `main`.
 | C1-01 | PR #28 com Backend quality gate verde | Pendente anexar |
 | C1-02 | Diff do PR #30 mostrando `>=` para `>` | Pendente anexar |
 | C1-03 | Log do teste reprovado no valor R$ 200,00 | Pendente anexar |
-| C1-04 | PR #30 com Backend vermelho e Frontend verde | Pendente anexar |
-| C1-05 | Mensagem de merge bloqueado após o ruleset | Depende do administrador |
+| C1-04 | PR #30 com Backend vermelho e Frontend verde | Anexado neste documento |
+| C1-05 | Mensagem de merge bloqueado após o ruleset | Anexado neste documento |
 | C2-01 | PR #29 com Frontend CI verde | Pendente anexar |
 | C2-02 | Log contendo `npm ci`, lint, teste e build aprovados | Pendente anexar |
 | C2-03 | Ruleset definitivo da `main` com três checks | Depende do administrador e da J2 |
 
-Os arquivos de imagem podem ser organizados posteriormente em
-`docs/evidencias/carlos/`, durante a consolidação do documento geral de evidências.
+Os arquivos de imagem estão organizados em `docs/evidencias/carlos/` e podem ser
+reutilizados na consolidação do documento geral de evidências.
 
 ## Roteiro simples para a apresentação
 
@@ -157,7 +137,7 @@ Os arquivos de imagem podem ser organizados posteriormente em
 > `npm ci`, executa lint, testes Vitest e o build de produção. O PR #29 comprova que
 > todas essas etapas passaram no GitHub Actions.
 >
-> Por fim, os checks serão obrigatórios pela branch protection. Assim, um erro que
+> Por fim, os checks agora são obrigatórios pela branch protection. Assim, um erro que
 > poderia passar despercebido deixa de depender de revisão manual e é bloqueado antes
 > de chegar à branch principal.
 
@@ -167,7 +147,7 @@ Os arquivos de imagem podem ser organizados posteriormente em
 2. Mostrar no PR #30 a alteração de uma única linha.
 3. Abrir o log vermelho e destacar o caso de R$ 200,00.
 4. Mostrar que o Frontend CI continuou verde.
-5. Após o ruleset, mostrar a mensagem de merge bloqueado.
+5. Mostrar a mensagem de merge bloqueado pelo ruleset.
 6. Mostrar o PR #29 e resumir as quatro etapas do frontend.
 
 ## Respostas rápidas para possíveis perguntas
@@ -189,8 +169,14 @@ resultado válido, mas pula as etapas pesadas quando não houve mudança no fron
 
 **O trabalho está totalmente concluído?**
 
-A implementação das duas tasks está concluída. O bloqueio administrativo final depende
-de permissão de administrador e o ruleset completo da `main` depende do E2E da J2.
+A C1 está totalmente concluída. Na C2, todas as partes do Carlos estão concluídas; o
+ruleset completo da `main` depende somente do workflow E2E da J2.
+
+## Encerramento das issues
+
+A issue #6 pode ser encerrada após o merge desta atualização de evidências. A issue #7
+deve permanecer aberta com o estado documentado até a J2 entregar o E2E e o
+administrador adicionar o terceiro check ao ruleset da `main`.
 
 ## Encerramento correto do PR de demonstração
 
