@@ -2,7 +2,7 @@ def calcular_desconto(subtotal: float) -> float:
     """Aplica desconto progressivo com base na faixa do subtotal."""
     if subtotal >= 500.0:
         return subtotal * 0.20
-    if subtotal >= 200.0:
+    if subtotal > 200.0:
         return subtotal * 0.10
     return 0.0
 
