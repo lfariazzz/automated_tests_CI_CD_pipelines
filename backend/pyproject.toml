@@ -14,5 +14,6 @@ addopts = "-ra --strict-markers"
 branch = true
 
 [tool.coverage.report]
+fail_under = 75
 show_missing = true
 skip_covered = true
