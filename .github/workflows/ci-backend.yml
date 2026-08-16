@@ -85,4 +85,60 @@ jobs:
           name: backend-coverage-${{ github.sha }}
           path: backend/coverage.xml
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 14 
+      - name: Instalar pip-audit
+        if: steps.changes.outputs.backend == 'true' && always()
+        run: python -m pip install pip-audit
+
+      - name: Auditar dependencias Python
+        if: steps.changes.outputs.backend == 'true' && always()
+        continue-on-error: true
+        run: pip-audit -r backend/requirements.txt
+
+      - name: Gerar relatorio JSON do pip-audit
+        if: steps.changes.outputs.backend == 'true' && always()
+        continue-on-error: true
+        run: >
+          pip-audit
+          -r backend/requirements.txt
+          --format json
+          --output pip-audit-report.json
+
+      - name: Construir imagem Docker do backend
+        if: steps.changes.outputs.backend == 'true' && always()
+        run: docker build --tag checkout-backend:${{ github.sha }} ./backend
+
+      - name: Analisar imagem Docker com Trivy
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: checkout-backend:${{ github.sha }}
+          format: table
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          vuln-type: os,library
+          exit-code: "0"
+
+      - name: Gerar relatorio JSON do Trivy
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: checkout-backend:${{ github.sha }}
+          format: json
+          output: trivy-report.json
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          vuln-type: os,library
+          exit-code: "0"
+          skip-setup-trivy: true
+
+      - name: Publicar relatorios de seguranca
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-security-${{ github.sha }}
+          path: |
+            pip-audit-report.json
+            trivy-report.json
+          if-no-files-found: warn
+          retention-days: 14          
