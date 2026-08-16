@@ -14,7 +14,16 @@ A divisão completa das tarefas — quem faz o quê, critérios de aceite e depe
 
 ## Estado atual
 
-A branch `develop` já contém o walking skeleton do projeto: backend FastAPI com `/health`, frontend React/Vite, as quatro regras de negócio isoladas, Dockerfiles e Docker Compose. A configuração dos hooks de pre-commit ainda está em correção para concluir integralmente a Fase 0.
+A branch `develop` já contém:
+
+- walking skeleton com backend FastAPI, frontend React/Vite, Dockerfiles e Docker Compose;
+- as quatro regras de negócio isoladas e hooks de pre-commit configurados;
+- testes unitários dos limites de desconto e quantidade;
+- CI do backend com Ruff, pytest, cobertura mínima e relatório como artifact;
+- CI do frontend com lint, testes Vitest e build de produção;
+- roteiros para demonstrar o quality gate e configurar a proteção da branch `main`.
+
+A Fase 0 e a primeira etapa dos workflows de CI estão concluídas. As próximas entregas incluem o formulário do frontend, testes de integração e E2E, segurança, cache e estratégia de tags, documentação final e os workflows de CD.
 
 ## Aplicação de exemplo
 
@@ -33,20 +42,22 @@ Essas regras têm **casos de borda clássicos** (comparação `>` vs `>=` no lim
 - **Frontend**: React + Vite (formulário de pedido consumindo a API) + Vitest (testes unitários/componente)
 - **E2E**: Playwright, rodando contra os dois serviços orquestrados via Docker Compose
 
-## Estrutura do repositório (planejada)
+## Estrutura do repositório
 
 ```
 repo/
 ├── backend/                    # API FastAPI + testes unitários/integração
 ├── frontend/                   # Interface React + testes unitários/componente
-├── e2e/                        # Testes end-to-end (Playwright)
+├── e2e/                        # Testes end-to-end (Playwright, planejado)
 ├── docker-compose.yml          # sobe backend+frontend juntos (dev/CI)
 ├── .github/workflows/          # pipelines de CI, E2E, release e CD
 └── docs/
     ├── divisao-tarefas.md      # backlog: quem faz o quê, critérios de aceite, dependências
-    ├── como-reproduzir.md      # pré-requisitos, instalação, como rodar tudo localmente
-    ├── evidencias.md           # prints/vídeo da pipeline funcionando
-    └── referencias.md          # bibliografia (documentação oficial das ferramentas)
+    ├── branch-protection.md    # configuração e validação da proteção da main
+    ├── roteiro-demonstracao-ci.md # roteiro da demonstração do quality gate
+    ├── como-reproduzir.md      # execução local (planejado)
+    ├── evidencias.md           # provas da pipeline funcionando (planejado)
+    └── referencias.md          # bibliografia das ferramentas (planejado)
 ```
 
 ## Como executar a versão atual
@@ -62,12 +73,15 @@ O frontend fica disponível em <http://localhost:5173> e o healthcheck do backen
 
 ## Desenho da pipeline
 
+Os workflows de backend e frontend já estão implementados. Os itens de E2E, segurança, eficiência e CD representam as próximas etapas do desenho planejado.
+
 ### CI (Continuous Integration)
-- `ci-backend.yml` e `ci-frontend.yml` rodam **em paralelo**, disparados só quando a pasta correspondente muda (path filtering)
-- Cada um faz: instalar dependências → lint → testes automatizados com cobertura → **quality gate** (build falha se cobertura ou lint não passarem)
-- Auditoria de dependências (`pip-audit`) e **scan de vulnerabilidade da imagem Docker** (Trivy) rodam como parte do CI do backend
-- `e2e.yml` sobe o stack completo via Docker Compose e roda os testes end-to-end
-- **Branch protection** em `main`: só permite merge se CI backend, CI frontend e E2E estiverem verdes — é aqui que a demonstração de "bug quebra o pipeline, PR fica bloqueado até corrigir" acontece
+- `ci-backend.yml` instala as dependências, executa Ruff e pytest com cobertura mínima de 75% e publica o relatório de cobertura como artifact
+- `ci-frontend.yml` instala as dependências, executa lint, testes Vitest e o build de produção
+- Em `push`, cada workflow usa path filtering; em pull requests, os checks sempre respondem, mas pulam as etapas pesadas quando a pasta correspondente não mudou
+- Auditoria de dependências (`pip-audit`) e **scan de vulnerabilidade da imagem Docker** (Trivy) serão adicionados ao CI do backend
+- `e2e.yml` subirá o stack completo via Docker Compose e executará os testes end-to-end
+- A **branch protection** em `main` exigirá CI backend, CI frontend e E2E verdes antes do merge — é aqui que a demonstração de "bug quebra o pipeline, PR fica bloqueado até corrigir" acontece
 
 ### Eficiência da pipeline
 - Cache de dependências (pip/npm) e de camadas Docker, pra acelerar os builds do CI
