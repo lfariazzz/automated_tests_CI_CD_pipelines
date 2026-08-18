@@ -8,5 +8,7 @@ services:
     build: ./frontend
     ports:
       - "5173:5173"
+    environment:
+      API_PROXY_TARGET: http://backend:8000
     depends_on:
       - backend
