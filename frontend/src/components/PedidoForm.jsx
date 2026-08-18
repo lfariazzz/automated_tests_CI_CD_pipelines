@@ -111,6 +111,7 @@ export default function PedidoForm({ carregando, erro, onSubmit }) {
               data-testid="quantidade-input"
               disabled={carregando}
               id="quantidade"
+              max="10"
               min="1"
               name="quantidade"
               onChange={handleChange}
@@ -119,7 +120,7 @@ export default function PedidoForm({ carregando, erro, onSubmit }) {
               type="number"
               value={values.quantidade}
             />
-            <small id="quantidade-hint">O limite é validado pela API.</small>
+            <small id="quantidade-hint">Entre 1 e 10 unidades.</small>
           </div>
         </div>
 
