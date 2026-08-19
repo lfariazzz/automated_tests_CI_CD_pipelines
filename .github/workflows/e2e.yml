@@ -1,0 +1,122 @@
+name: E2E
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "backend/**"
+      - "frontend/**"
+      - "e2e/**"
+      - "docker-compose.yml"
+      - ".github/workflows/e2e.yml"
+  pull_request:
+    branches:
+      - develop
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: e2e-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    name: E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detectar alteracoes relevantes
+        id: changes
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" || "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "e2e=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            -- backend frontend e2e docker-compose.yml .github/workflows/e2e.yml; then
+            echo "e2e=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "e2e=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configurar Node.js
+        if: steps.changes.outputs.e2e == 'true'
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: e2e/package-lock.json
+
+      - name: Instalar dependencias E2E
+        if: steps.changes.outputs.e2e == 'true'
+        working-directory: e2e
+        run: npm ci
+
+      - name: Instalar Chromium
+        if: steps.changes.outputs.e2e == 'true'
+        working-directory: e2e
+        run: npx playwright install --with-deps chromium
+
+      - name: Subir servicos
+        if: steps.changes.outputs.e2e == 'true'
+        run: docker compose up --build --detach
+
+      - name: Aguardar backend saudavel
+        if: steps.changes.outputs.e2e == 'true'
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Aguardar frontend disponivel
+        if: steps.changes.outputs.e2e == 'true'
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5173; then
+              exit 0
+            fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Executar testes E2E
+        if: steps.changes.outputs.e2e == 'true'
+        working-directory: e2e
+        run: npm test
+
+      - name: Publicar relatorio Playwright
+        if: always() && steps.changes.outputs.e2e == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report-${{ github.sha }}
+          path: |
+            e2e/playwright-report
+            e2e/test-results
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Exibir logs dos servicos em caso de falha
+        if: failure() && steps.changes.outputs.e2e == 'true'
+        run: docker compose logs --no-color
+
+      - name: Encerrar servicos
+        if: always() && steps.changes.outputs.e2e == 'true'
+        run: docker compose down --volumes
