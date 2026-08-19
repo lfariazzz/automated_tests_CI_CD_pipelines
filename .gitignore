@@ -216,3 +216,7 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Playwright reports
+e2e/playwright-report/
+e2e/test-results/
