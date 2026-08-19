@@ -67,7 +67,7 @@ jobs:
       - name: Instalar Chromium
         if: steps.changes.outputs.e2e == 'true'
         working-directory: e2e
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium
 
       - name: Subir servicos
         if: steps.changes.outputs.e2e == 'true'
