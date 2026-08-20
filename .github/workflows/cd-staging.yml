@@ -1,16 +1,17 @@
 name: CD Staging
 
 on:
-  push:
-    tags:
-      - "v*.*.*"
+  workflow_run:
+    workflows: ["Release"]
+    types:
+      - completed
 
 permissions:
   contents: read
   packages: write
 
 concurrency:
-  group: cd-staging-${{ github.workflow }}-${{ github.ref }}
+  group: cd-staging-${{ github.workflow }}
   cancel-in-progress: false
 
 env:
@@ -20,12 +21,16 @@ env:
 jobs:
   deploy-staging:
     name: Deploy em staging
+    if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
     steps:
-      - name: Checkout do repositorio
+      - name: Checkout do commit que gerou a release
         uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          fetch-depth: 0
 
       - name: Login no GHCR
         uses: docker/login-action@v3
@@ -41,8 +46,14 @@ jobs:
         id: image_tag
         shell: bash
         run: |
-          echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-          echo "version_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+          sha="${{ github.event.workflow_run.head_sha }}"
+          tag=$(git tag --points-at "$sha" | head -n1)
+          if [[ -z "$tag" ]]; then
+            echo "Nenhuma tag de release encontrada no commit $sha"
+            exit 1
+          fi
+          echo "sha_tag=sha-${sha::7}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=$tag" >> "$GITHUB_OUTPUT"
 
       - name: Build e push da imagem do backend
         uses: docker/build-push-action@v6
