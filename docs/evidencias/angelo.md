@@ -42,7 +42,7 @@ backend terminarem com sucesso.
 - [Frontend CI aprovado](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32151294984/job/95757550159)
 - [Backend quality gate aprovado](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32151295266/job/95757551304)
 
-![PR #38 mergeado em develop com a descrição das entregas](evidencias/Angelo/A1-01-pr38-mergeado.png)
+![PR #38 mergeado em develop com a descrição das entregas](Angelo/A1-01-pr38-mergeado.png)
 
 O print registra o PR criado por Angelo a partir da branch
 `feat/frontend-formulario-pedido`, os dois commits da implementação e o merge em
@@ -51,7 +51,7 @@ validações executadas.
 
 ### Evidência 2 — Fluxo completo funcionando
 
-![Formulário preenchido e resumo calculado pelo backend](evidencias/Angelo/A1-02-formulario-resumo-funcionando.png)
+![Formulário preenchido e resumo calculado pelo backend](Angelo/A1-02-formulario-resumo-funcionando.png)
 
 O fluxo foi reproduzido na versão atual de `develop`, com frontend e backend reais
 executados pelo Docker Compose. Foram utilizados os seguintes dados:
@@ -98,7 +98,7 @@ componentes.
 
 ### Evidência 3 — Suíte aprovada
 
-![Vitest com 3 arquivos e 10 testes do frontend aprovados](evidencias/Angelo/A2-01-testes-frontend-aprovados.png)
+![Vitest com 3 arquivos e 10 testes do frontend aprovados](Angelo/A2-01-testes-frontend-aprovados.png)
 
 O comando executado na pasta `frontend` foi:
 

@@ -25,7 +25,7 @@ preenche um pedido até conferir o resumo calculado na tela.
 - Proxy do frontend apontando para `http://backend:8000` dentro da rede do Compose.
 - Pacote E2E em `e2e/` com Playwright.
 - Teste `e2e/tests/pedido.spec.js` cobrindo o fluxo completo de pedido.
-- Guia de reprodução em `docs/como-reproduzir.md`.
+- Guia de reprodução em `docs/pipeline/como-reproduzir.md`.
 
 ### Fluxo validado pelo Playwright
 
@@ -135,11 +135,11 @@ J2-04 comprova a integração final do E2E com a branch protection.
 
 ### J1 - Execução local
 
-![Serviços saudáveis no Docker Compose](evidencias/jetro/J1-01-compose-servicos-saudaveis.png)
+![Serviços saudáveis no Docker Compose](jetro/J1-01-compose-servicos-saudaveis.png)
 
-![Pedido calculado no frontend](evidencias/jetro/J1-02-frontend-pedido-calculado.png)
+![Pedido calculado no frontend](jetro/J1-02-frontend-pedido-calculado.png)
 
-![Teste Playwright local aprovado](evidencias/jetro/J1-03-playwright-local-verde.png)
+![Teste Playwright local aprovado](jetro/J1-03-playwright-local-verde.png)
 
 ### J2 - Evidências pendentes
 

@@ -149,13 +149,13 @@ Continuam **não contando no cálculo das tasks técnicas**. Duas coisas diferen
 
 | Solta | Quem escreve | Quem coordena | Por quê |
 |---|---|---|---|
-| `docs/como-reproduzir.md` | **Jetro** | — | Único dono: o Compose (J1) é o caminho único de reprodução, cobre backend+frontend juntos — fragmentar entre vários donos não agrega |
+| `docs/pipeline/como-reproduzir.md` | **Jetro** | — | Único dono: o Compose (J1) é o caminho único de reprodução, cobre backend+frontend juntos — fragmentar entre vários donos não agrega |
 | `README.md` | **David** | — | Único dono, por vocação: doc editorial/estrutural, múltiplos autores deixariam a voz inconsistente |
 | `docs/evidencias.md` | **Todos** (cada um sobe a evidência da própria task) | **Levi + Malaquias** | Sem contribuição de todos, a maior parte da pipeline ficaria sem prova de funcionamento; os coordenadores organizam e conferem o material final |
 | `docs/referencias.md` | **Todos** (cada um lista a documentação oficial das ferramentas que usou na própria task) | **Malaquias** | Cada pessoa conhece melhor as ferramentas que usou; Malaquias consolida tudo num único documento |
 | Roteiro da apresentação | **Todos** (cada um traz a explicação da própria task) | **David** | O próprio enunciado exige participação equilibrada de todos na fala; David estrutura a narrativa geral (objetivos → arquitetura → demo → desafios → resultados) |
 
-- [ ] `docs/como-reproduzir.md` — **Jetro**: pré-requisitos, instalação, como rodar tudo localmente
+- [ ] `docs/pipeline/como-reproduzir.md` — **Jetro**: pré-requisitos, instalação, como rodar tudo localmente
 - [ ] `README.md` — **David**: manter atualizado (objetivos, estrutura, como navegar)
 - [ ] `docs/evidencias.md` — **Todos** (coordenam: Levi + Malaquias): cada um sobe print/log da própria task; inclui o cenário de falha/correção do C1 e o rollback do L2
 - [ ] `docs/referencias.md` — **Todos** (coordena: Malaquias): cada um lista as referências das ferramentas que usou; Malaquias consolida
