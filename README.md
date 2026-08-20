@@ -25,7 +25,7 @@ A branch `develop` já contém:
 - quality gate validado por um PR de demonstração propositalmente quebrado;
 - rulesets de proteção configurados para `develop` e `main`, atualmente exigindo os checks de backend e frontend.
 
-A Fase 0, os workflows iniciais de CI, o quality gate e a etapa de segurança já estão concluídos. O cache de camadas Docker e a convenção de tags estão em revisão. As próximas entregas incluem o formulário do frontend, testes de integração e E2E, documentação final e os workflows de CD.
+A Fase 0, os workflows iniciais de CI, o quality gate, a etapa de segurança e o fluxo E2E já estão implementados. O cache de camadas Docker e a convenção de tags estão em revisão; os workflows de CD representam as próximas entregas.
 
 ## Aplicação de exemplo
 
@@ -159,14 +159,14 @@ Este contrato é a referência para o formulário do frontend, para os testes de
 repo/
 ├── backend/                    # API FastAPI + testes unitários/integração
 ├── frontend/                   # Interface React + testes unitários/componente
-├── e2e/                        # Testes end-to-end (Playwright, planejado)
+├── e2e/                        # Testes end-to-end (Playwright)
 ├── docker-compose.yml          # sobe backend+frontend juntos (dev/CI)
 ├── .github/workflows/          # pipelines de CI, E2E, release e CD
 └── docs/
     ├── divisao-tarefas.md      # backlog: quem faz o quê, critérios de aceite, dependências
     ├── branch-protection.md    # configuração e validação da proteção da main
     ├── roteiro-demonstracao-ci.md # roteiro da demonstração do quality gate
-    ├── como-reproduzir.md      # execução local (planejado)
+    ├── como-reproduzir.md      # execução local e testes
     ├── evidencias.md           # provas da pipeline funcionando (planejado)
     └── referencias.md          # bibliografia das ferramentas (planejado)
 ```
@@ -180,19 +180,19 @@ git switch develop
 docker compose up --build
 ```
 
-O frontend fica disponível em <http://localhost:5173> e o healthcheck do backend em <http://localhost:8000/health>. Para encerrar e remover os contêineres, execute `docker compose down`.
+O frontend fica disponível em <http://localhost:5173> e o healthcheck do backend em <http://localhost:8000/health>. Para encerrar e remover os contêineres, execute `docker compose down`. Consulte o [guia de reprodução](docs/como-reproduzir.md) para executar as camadas isoladamente e rodar o E2E.
 
 ## Desenho da pipeline
 
-Os workflows de backend e frontend já estão implementados, assim como a auditoria de segurança do backend. Os itens de E2E, eficiência e CD representam as próximas etapas do desenho planejado.
+Os workflows de backend, frontend e E2E já estão implementados, assim como a auditoria de segurança do backend. Eficiência e CD representam as próximas etapas do desenho planejado.
 
 ### CI (Continuous Integration)
 - `ci-backend.yml` instala as dependências, executa Ruff e pytest com cobertura mínima de 75% e publica o relatório de cobertura como artifact
 - `ci-frontend.yml` instala as dependências, executa lint, testes Vitest e o build de produção
 - Em `push`, cada workflow usa path filtering; em pull requests, os checks sempre respondem, mas pulam as etapas pesadas quando a pasta correspondente não mudou
 - O CI do backend já executa auditoria de dependências com `pip-audit` e scan de vulnerabilidades da imagem Docker com Trivy, publicando os relatórios como artifacts; essas verificações são informativas e não bloqueantes no MVP
-- `e2e.yml` subirá o stack completo via Docker Compose e executará os testes end-to-end
-- Os rulesets de `develop` e `main` já exigem os checks de backend e frontend. Quando o workflow E2E estiver disponível, o check correspondente será incluído na proteção definitiva da `main`
+- `e2e.yml` sobe o stack completo via Docker Compose, aguarda os serviços e executa os testes end-to-end, publicando o relatório Playwright como artifact
+- Os rulesets de `develop` e `main` já exigem os checks de backend e frontend. Após a primeira execução do workflow E2E, o nome real do check deve ser incluído na proteção definitiva da `main`
 
 ### Eficiência da pipeline
 - Cache de dependências (pip/npm) já está configurado; o cache de camadas Docker está em revisão
