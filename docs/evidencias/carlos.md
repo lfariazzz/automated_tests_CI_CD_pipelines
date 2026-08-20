@@ -24,7 +24,7 @@ isolado na branch `demo/bug-limite-desconto` e nunca deve ser mergeado.
 - Cobertura do pacote `app` com limite mínimo de 75%.
 - Relatório `coverage.xml` publicado como artifact.
 - Detecção de mudanças para evitar execução pesada quando o backend não foi alterado.
-- Roteiro em `docs/roteiro-demonstracao-ci.md`.
+- Roteiro em `docs/pipeline/roteiro-demonstracao-ci.md`.
 
 ### Por que o limite é 75%
 
@@ -58,7 +58,7 @@ os pipelines são independentes.
 
 ### Evidência do bloqueio administrativo
 
-![PR #30 com o backend reprovado, o frontend aprovado e o merge bloqueado](evidencias/carlos/C1-05-merge-bloqueado.jpeg)
+![PR #30 com o backend reprovado, o frontend aprovado e o merge bloqueado](carlos/C1-05-merge-bloqueado.jpeg)
 
 O print comprova simultaneamente que os dois checks são obrigatórios e que o GitHub
 desabilitou o merge por causa da falha do backend.
@@ -74,7 +74,7 @@ desabilitou o merge por causa da falha do backend.
 - Teste de componente com Vitest e Testing Library.
 - Build de produção com Vite.
 - Detecção de mudanças compatível com checks obrigatórios.
-- Instruções administrativas em `docs/branch-protection.md`.
+- Instruções administrativas em `docs/pipeline/branch-protection.md`.
 
 ### Evidência de aprovação
 

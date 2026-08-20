@@ -2,7 +2,7 @@
 
 Este documento registra as evidências das duas tasks técnicas do Henrique: cache de
 build/convenção de tags (H1) e testes de integração da API + regras de frete/imposto
-(H2). Segue o mesmo formato usado em [`evidencias-carlos.md`](evidencias-carlos.md) e
+(H2). Segue o mesmo formato usado em [`evidencias/carlos.md`](carlos.md) e
 deve ser incorporado ao `docs/evidencias.md` consolidado quando Levi/Malaquias
 criarem o arquivo final (issue #11).
 
@@ -21,7 +21,7 @@ criarem o arquivo final (issue #11).
   `.github/workflows/ci-backend.yml`, evitando reconstruir camadas que não mudaram
   (ex: instalação de dependências) a cada execução.
 - Convenção de tags documentada em
-  [`docs/convencao-tags-imagens.md`](convencao-tags-imagens.md): `sha-<7 chars>`
+  [`docs/pipeline/convencao-tags-imagens.md`](../pipeline/convencao-tags-imagens.md): `sha-<7 chars>`
   (todo build), `vMAJOR.MINOR.PATCH` (release em `main`) e `stable` (ponteiro pós
   deploy em produção).
 - Alinhamento posterior (commit `c2289c8`) da tag SHA da imagem para o padrão de 7
@@ -34,11 +34,11 @@ criarem o arquivo final (issue #11).
 - Checks do PR: `Backend quality gate` ✅ e `Frontend CI` ✅
   ([execução](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32156714216))
 
-![PR #35 mergeado em develop, com o resumo da implementação](evidencias/henrique/H1-01-pr35-mergeado.jpg)
+![PR #35 mergeado em develop, com o resumo da implementação](henrique/H1-01-pr35-mergeado.jpg)
 
-![Aba de checks do PR #35: CI Backend e CI Frontend verdes](evidencias/henrique/H1-02-checks-verdes.jpg)
+![Aba de checks do PR #35: CI Backend e CI Frontend verdes](henrique/H1-02-checks-verdes.jpg)
 
-![Execução do workflow CI Backend (#17): Backend quality gate concluído com sucesso em 1m 37s](evidencias/henrique/H1-03-ci-backend-run.jpg)
+![Execução do workflow CI Backend (#17): Backend quality gate concluído com sucesso em 1m 37s](henrique/H1-03-ci-backend-run.jpg)
 
 ### Evidência do cache funcionando
 
@@ -87,9 +87,9 @@ não é bloqueante, os prints acima já comprovam o cache configurado e funciona
 - Checks do PR: `Backend quality gate` ✅ e `Frontend CI` ✅
   ([execução](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32275948613))
 
-![PR #40 mergeado em develop, fechando a issue #5, com o plano de teste marcado (32 testes, 98,6% de cobertura)](evidencias/henrique/H2-01-pr40-mergeado-fecha-issue5.jpg)
+![PR #40 mergeado em develop, fechando a issue #5, com o plano de teste marcado (32 testes, 98,6% de cobertura)](henrique/H2-01-pr40-mergeado-fecha-issue5.jpg)
 
-![Aba de checks do PR #40: CI Backend e CI Frontend verdes](evidencias/henrique/H2-02-checks-verdes.jpg)
+![Aba de checks do PR #40: CI Backend e CI Frontend verdes](henrique/H2-02-checks-verdes.jpg)
 
 ### Resultado local
 
