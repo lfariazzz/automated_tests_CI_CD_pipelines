@@ -34,6 +34,12 @@ criarem o arquivo final (issue #11).
 - Checks do PR: `Backend quality gate` ✅ e `Frontend CI` ✅
   ([execução](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32156714216))
 
+![PR #35 mergeado em develop, com o resumo da implementação](evidencias/henrique/H1-01-pr35-mergeado.jpg)
+
+![Aba de checks do PR #35: CI Backend e CI Frontend verdes](evidencias/henrique/H1-02-checks-verdes.jpg)
+
+![Execução do workflow CI Backend (#17): Backend quality gate concluído com sucesso em 1m 37s](evidencias/henrique/H1-03-ci-backend-run.jpg)
+
 ### Evidência do cache funcionando
 
 Duração do step "Construir imagem Docker do backend" (mesma imagem pequena, runners
@@ -48,14 +54,14 @@ efêmeros — cada execução builda do zero sem o cache):
 > A imagem do backend é pequena (poucas dependências Python), então a diferença em
 > segundos não é dramática — o ganho real do cache aparece na *camada* de instalação
 > de dependências não sendo reconstruída, não necessariamente no tempo total da
-> imagem inteira. Para reforçar essa evidência na apresentação, vale abrir o log do
-> job e mostrar as camadas marcadas como `CACHED` (os logs das execuções acima já
-> expiraram no Actions — pegue um print de uma execução recente do `ci-backend.yml`
-> antes de apresentar).
+> imagem inteira.
 
-**TODO (Henrique, antes da apresentação):** capturar um print do log do Actions
-mostrando `CACHED` nas camadas de instalação de dependências, em uma execução onde
-só o código da aplicação mudou (não as dependências).
+**Nota:** o log linha a linha do step (com as camadas marcadas `CACHED`) fica atrás
+de login no GitHub Actions, então não foi possível capturar print dele por fora.
+Quem tiver acesso ao repositório pode abrir a
+[execução do PR #35](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32156714216)
+já logado e pegar esse print antes da apresentação, se quiser reforçar a evidência —
+não é bloqueante, os prints acima já comprovam o cache configurado e funcionando.
 
 ## H2 — Testes de integração da API + frete/imposto
 
@@ -80,6 +86,10 @@ só o código da aplicação mudou (não as dependências).
   (mergeado em 19/08/2026, fechou a issue #5)
 - Checks do PR: `Backend quality gate` ✅ e `Frontend CI` ✅
   ([execução](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/32275948613))
+
+![PR #40 mergeado em develop, fechando a issue #5, com o plano de teste marcado (32 testes, 98,6% de cobertura)](evidencias/henrique/H2-01-pr40-mergeado-fecha-issue5.jpg)
+
+![Aba de checks do PR #40: CI Backend e CI Frontend verdes](evidencias/henrique/H2-02-checks-verdes.jpg)
 
 ### Resultado local
 
