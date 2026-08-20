@@ -1,35 +1,109 @@
 # Testes Automatizados em Pipelines CI/CD
 
-## Contexto
+Trabalho prático da disciplina de **Gerência de Configuração** (UFCA — Bacharelado em
+Engenharia de Software), modalidade **prática**, tema **10. Testes Automatizados em
+Pipelines CI/CD**.
 
-Trabalho prático da disciplina de Gerência de Configuração (UFCA), modalidade **prática**, tema **Integração, Entrega e Implantação Contínuas (CI/CD)**.
+## Objetivos do trabalho
 
-O foco do trabalho **não é a aplicação em si**: o código do sistema de exemplo será gerado com apoio de IA e serve apenas como material para demonstrar a pipeline funcionando. O esforço real do grupo está em **desenhar, implementar e validar a pipeline** — testes em múltiplas camadas, quality gates, segurança, versionamento, empacotamento, deploy e rollback.
+O foco do trabalho **não é a aplicação de exemplo em si** — o código do sistema usado como
+pretexto foi gerado com apoio de IA e serve só de material para demonstrar a pipeline
+funcionando. O esforço real do grupo está em **desenhar, implementar e validar uma pipeline
+completa de CI/CD**, cobrindo:
+
+- Testes automatizados em múltiplas camadas (unitário, integração, E2E) como parte do
+  pipeline, não como etapa isolada;
+- Quality gates que bloqueiam merge quando os critérios de qualidade não são atingidos;
+- Segurança integrada ao pipeline (auditoria de dependências, scan de imagem Docker);
+- Versionamento semântico automatizado e gerenciamento de releases;
+- Entrega contínua (build, publicação de artefatos e deploy automático em staging);
+- Implantação contínua com aprovação humana e rollback automático em produção.
+
+Objetivos de aprendizagem específicos: compreender os conceitos e práticas de CI/CD e do
+ecossistema DevOps, investigar ferramentas amplamente usadas na indústria (GitHub Actions,
+Docker, GHCR, Playwright, Trivy, pip-audit), e entender como essas práticas aumentam a
+qualidade, confiabilidade e produtividade do desenvolvimento de software.
 
 ## Grupo
 
 Levi, David, Henrique, Carlos, Angelo, Jetro e Malaquias (7 integrantes).
 
-A divisão completa das tarefas — quem faz o quê, critérios de aceite e dependências — está em [`docs/divisao-tarefas.md`](docs/divisao-tarefas.md), e o andamento é acompanhado no [Project do GitHub](https://github.com/users/lfariazzz/projects/3).
+A divisão completa das tarefas — quem faz o quê, critérios de aceite e dependências — está em
+[`docs/divisao-tarefas.md`](docs/divisao-tarefas.md), e o andamento é acompanhado no
+[Project do GitHub](https://github.com/users/lfariazzz/projects/3).
+
+## Organização do repositório
+
+```
+repo/
+├── backend/                    # API FastAPI + testes unitários/integração
+├── frontend/                   # Interface React + testes unitários/componente
+├── e2e/                        # Testes end-to-end (Playwright)
+├── docker-compose.yml          # sobe backend+frontend juntos (dev/CI)
+├── docker-compose.staging.yml  # mesma composição, usando as imagens publicadas no GHCR
+├── .github/workflows/          # pipelines de CI, E2E, release e CD
+└── docs/
+    ├── divisao-tarefas.md      # backlog: quem faz o quê, critérios de aceite, dependências
+    ├── pipeline/                 # docs de infraestrutura da pipeline
+    │   ├── branch-protection.md      # configuração e validação da proteção da main
+    │   ├── convencao-tags-imagens.md # convenção de tags das imagens Docker
+    │   ├── como-reproduzir.md        # execução local, por camada, e do E2E
+    │   └── roteiro-demonstracao-ci.md # roteiro da demonstração do quality gate
+    └── evidencias/              # evidências por pessoa (uma pasta de imagens + um .md por pessoa)
+        ├── <nome>.md
+        └── <nome>/<prints>
+```
+
+## Navegação na documentação
+
+- **Quer entender o que cada pessoa fez e por quê?** Comece por
+  [`docs/divisao-tarefas.md`](docs/divisao-tarefas.md) — tem o contexto, escopo e critério de
+  aceite de cada task.
+- **Quer ver prova de que cada entrega funciona?** `docs/evidencias/<nome>.md` — um por
+  pessoa, com links de PR, execuções de workflow e prints.
+- **Quer entender como a pipeline foi montada e como reproduzi-la localmente?**
+  `docs/pipeline/` — convenção de tags, proteção de branch, roteiro de demonstração e guia de
+  reprodução.
+- **Quer ver o contrato da API consumido por frontend, backend e testes?** Seção
+  [Contrato da API](#contrato-da-api) abaixo, neste README.
+
+> **Pendente:** a seção de referências bibliográficas (documentação oficial das ferramentas
+> usadas por cada pessoa) e o roteiro de apresentação ainda não foram consolidados — cada
+> integrante deve produzir a própria lista de referências antes da entrega final; a versão
+> consolidada será publicada em `docs/referencias.md`.
 
 ## Estado atual
 
-A branch `develop` já contém:
+A `main` já recebeu a primeira entrega completa do pipeline, testada de ponta a ponta:
 
-- walking skeleton com backend FastAPI, frontend React/Vite, Dockerfiles e Docker Compose;
-- as quatro regras de negócio isoladas e hooks de pre-commit configurados;
-- testes unitários dos limites de desconto e quantidade;
-- CI do backend com Ruff, pytest, cobertura mínima e relatório como artifact;
-- CI do frontend com lint, testes Vitest e build de produção;
-- auditoria de dependências com `pip-audit` e scan da imagem Docker com Trivy, com relatórios publicados como artifacts;
-- quality gate validado por um PR de demonstração propositalmente quebrado;
-- rulesets de proteção configurados para `develop` e `main`, atualmente exigindo os checks de backend e frontend.
+- Walking skeleton com backend FastAPI, frontend React/Vite, Dockerfiles e Docker Compose;
+- API de pedidos (`POST/GET /pedidos`, `GET /pedidos/{id}`) e frontend consumindo-a via
+  formulário com resumo calculado;
+- Quatro regras de negócio isoladas, com testes cobrindo os limites exatos de cada uma;
+- CI do backend (lint, testes, cobertura mínima de 75%) e do frontend (lint, testes, build de
+  produção), cada um com path filtering e cancelamento de execuções obsoletas;
+- Auditoria de dependências (`pip-audit`) e scan de vulnerabilidades da imagem Docker
+  (Trivy), com relatórios publicados como artifacts;
+- Pipeline E2E com Playwright, subindo o stack completo via Docker Compose com healthcheck;
+- Rulesets de proteção configurados para `develop` e `main`;
+- Cache de camadas Docker no CI e convenção de tags de imagem documentada e aplicada;
+- **Release automático** (`release.yml`): versão semântica calculada a partir dos commits,
+  tag e GitHub Release criados a cada merge na `main`;
+- **Deploy contínuo em staging** (`cd-staging.yml`): disparado automaticamente após o
+  release, builda e publica as imagens no GHCR e valida o deploy com healthcheck;
+- **Deploy em produção com aprovação e rollback** (`cd-production.yml`): disparo manual,
+  aprovação obrigatória via GitHub Environment, promoção da imagem a `stable` se o
+  healthcheck passar, ou rollback automático para a última `stable` se falhar.
 
-A Fase 0, os workflows iniciais de CI, o quality gate, a etapa de segurança e o fluxo E2E já estão implementados. O cache de camadas Docker e a convenção de tags estão em revisão; os workflows de CD representam as próximas entregas.
+O ciclo completo (merge → release → staging automático → aprovação → produção) já foi
+validado de ponta a ponta com a versão `v0.0.2` — ver
+[`docs/evidencias/levi.md`](docs/evidencias/levi.md).
 
 ## Aplicação de exemplo
 
-Sistema full-stack de **cálculo de pedidos** (carrinho → checkout), escolhido porque tem regras de negócio simples, determinísticas e fáceis de "quebrar de propósito" para demonstrar a automação pegando erros.
+Sistema full-stack de **cálculo de pedidos** (carrinho → checkout), escolhido porque tem
+regras de negócio simples, determinísticas e fáceis de "quebrar de propósito" para demonstrar
+a automação pegando erros.
 
 **Regras de negócio (o que gera os casos de teste):**
 - Desconto progressivo por faixa de valor do subtotal (ex: ≥ R$200 → 10%, ≥ R$500 → 20%)
@@ -37,16 +111,22 @@ Sistema full-stack de **cálculo de pedidos** (carrinho → checkout), escolhido
 - Limite máximo de itens por produto no pedido
 - Imposto calculado sobre o subtotal (antes do desconto)
 
-Essas regras têm **casos de borda clássicos** (comparação `>` vs `>=` no limite exato, ordem de aplicação de desconto/imposto) — é justamente esse tipo de bug que o grupo vai injetar de propósito numa demonstração ao vivo para mostrar o CI reprovando o PR.
+Essas regras têm **casos de borda clássicos** (comparação `>` vs `>=` no limite exato, ordem
+de aplicação de desconto/imposto) — é justamente esse tipo de bug que o grupo injeta de
+propósito nas demonstrações para mostrar o CI reprovando o PR.
 
 **Stack:**
-- **Backend**: Python + FastAPI (API com as regras de negócio) + pytest (testes unitários e de integração)
-- **Frontend**: React + Vite (formulário de pedido consumindo a API) + Vitest (testes unitários/componente)
+- **Backend**: Python + FastAPI (API com as regras de negócio) + pytest (testes unitários e de
+  integração)
+- **Frontend**: React + Vite (formulário de pedido consumindo a API) + Vitest (testes
+  unitários/componente)
 - **E2E**: Playwright, rodando contra os dois serviços orquestrados via Docker Compose
 
 ## Contrato da API
 
-A API usa como base `http://localhost:8000`. O endpoint `/health` já existe; os endpoints de pedidos abaixo definem o contrato que deve ser seguido pelas implementações de backend, frontend e testes de integração.
+A API usa como base `http://localhost:8000`. O endpoint `/health` já existe; os endpoints de
+pedidos abaixo definem o contrato seguido pelas implementações de backend, frontend e testes
+de integração.
 
 ### `GET /health`
 
@@ -149,27 +229,9 @@ Busca um pedido pelo identificador.
 
 ### Erros de validação
 
-Requisições com campos ausentes, tipos inválidos, preço não positivo ou quantidade fora do intervalo permitido devem retornar `422 Unprocessable Entity`, seguindo o formato de erro de validação do FastAPI.
-
-Este contrato é a referência para o formulário do frontend, para os testes de integração da API e para os testes E2E. Caso o contrato precise mudar, o README deve ser atualizado antes das implementações dependentes.
-
-## Estrutura do repositório
-
-```
-repo/
-├── backend/                    # API FastAPI + testes unitários/integração
-├── frontend/                   # Interface React + testes unitários/componente
-├── e2e/                        # Testes end-to-end (Playwright)
-├── docker-compose.yml          # sobe backend+frontend juntos (dev/CI)
-├── .github/workflows/          # pipelines de CI, E2E, release e CD
-└── docs/
-    ├── divisao-tarefas.md      # backlog: quem faz o quê, critérios de aceite, dependências
-    ├── branch-protection.md    # configuração e validação da proteção da main
-    ├── roteiro-demonstracao-ci.md # roteiro da demonstração do quality gate
-    ├── como-reproduzir.md      # execução local e testes
-    ├── evidencias.md           # provas da pipeline funcionando (planejado)
-    └── referencias.md          # bibliografia das ferramentas (planejado)
-```
+Requisições com campos ausentes, tipos inválidos, preço não positivo ou quantidade fora do
+intervalo permitido devem retornar `422 Unprocessable Entity`, seguindo o formato de erro de
+validação do FastAPI.
 
 ## Como executar a versão atual
 
@@ -180,36 +242,54 @@ git switch develop
 docker compose up --build
 ```
 
-O frontend fica disponível em <http://localhost:5173> e o healthcheck do backend em <http://localhost:8000/health>. Para encerrar e remover os contêineres, execute `docker compose down`. Consulte o [guia de reprodução](docs/como-reproduzir.md) para executar as camadas isoladamente e rodar o E2E.
+O frontend fica disponível em <http://localhost:5173> e o healthcheck do backend em
+<http://localhost:8000/health>. Para encerrar e remover os contêineres, execute
+`docker compose down`. Consulte o
+[guia de reprodução](docs/pipeline/como-reproduzir.md) para executar as camadas isoladamente
+e rodar o E2E.
 
 ## Desenho da pipeline
 
-Os workflows de backend, frontend e E2E já estão implementados, assim como a auditoria de segurança do backend. Eficiência e CD representam as próximas etapas do desenho planejado.
-
 ### CI (Continuous Integration)
-- `ci-backend.yml` instala as dependências, executa Ruff e pytest com cobertura mínima de 75% e publica o relatório de cobertura como artifact
-- `ci-frontend.yml` instala as dependências, executa lint, testes Vitest e o build de produção
-- Em `push`, cada workflow usa path filtering; em pull requests, os checks sempre respondem, mas pulam as etapas pesadas quando a pasta correspondente não mudou
-- O CI do backend já executa auditoria de dependências com `pip-audit` e scan de vulnerabilidades da imagem Docker com Trivy, publicando os relatórios como artifacts; essas verificações são informativas e não bloqueantes no MVP
-- `e2e.yml` sobe o stack completo via Docker Compose, aguarda os serviços e executa os testes end-to-end, publicando o relatório Playwright como artifact
-- Os rulesets de `develop` e `main` já exigem os checks de backend e frontend. Após a primeira execução do workflow E2E, o nome real do check deve ser incluído na proteção definitiva da `main`
-
-### Eficiência da pipeline
-- Cache de dependências (pip/npm) já está configurado; o cache de camadas Docker está em revisão
-- A convenção de tags das imagens (sha de commit, versão semântica, `stable`) está sendo definida para ser consumida pelos workflows de CD
+- `ci-backend.yml`: instala as dependências, executa Ruff e pytest com cobertura mínima de
+  75%, publica o relatório de cobertura como artifact, audita dependências com `pip-audit` e
+  escaneia a imagem Docker com Trivy (informativo, não bloqueante)
+- `ci-frontend.yml`: instala as dependências, executa lint, testes Vitest e o build de produção
+- `e2e.yml`: sobe o stack completo via Docker Compose (com healthcheck), aguarda os serviços
+  e executa os testes end-to-end com Playwright, publicando o relatório como artifact
+- Em `push`, cada workflow usa path filtering; em pull requests, os checks sempre respondem,
+  mas pulam as etapas pesadas quando a pasta correspondente não mudou
+- Todos usam cache (pip/npm e camadas Docker via `type=gha`) para builds mais rápidos
+- Os rulesets de `develop` e `main` exigem os checks de backend e frontend
 
 ### Continuous Delivery
-- `release.yml`: ao mergear em `main`, gera versão semântica automaticamente (baseado em convenção de commits) e cria tag/release
-- `cd-staging.yml`: builda as imagens Docker (backend e frontend), publica no registry (GHCR) e faz deploy automático em ambiente de staging, com healthcheck pós-deploy
+- `release.yml`: a cada merge na `main`, calcula a próxima versão semântica a partir dos
+  commits (Conventional Commits, com fallback para patch), cria a tag e a GitHub Release
+- `cd-staging.yml`: disparado automaticamente quando o `release.yml` termina com sucesso
+  (via `workflow_run` — pushes com o token padrão não disparam outros workflows), builda e
+  publica as imagens no GHCR (tags `sha-<hash>` e `vX.Y.Z`) e faz deploy simulado em staging,
+  validado por healthcheck
 
 ### Continuous Deployment
-- `cd-production.yml`: disparado manualmente, com **aprovação obrigatória** (GitHub Environments) — mostra a fronteira entre Delivery (staging automático) e Deployment (produção com gate humano)
-- Healthcheck pós-deploy; se falhar, **rollback automático** para a última versão marcada como estável
+- `cd-production.yml`: disparo manual (`workflow_dispatch`, informando a versão), com
+  **aprovação obrigatória** via GitHub Environment `production` antes de qualquer passo
+  rodar — a fronteira entre Delivery (staging automático) e Deployment (produção com gate
+  humano)
+- Guarda a imagem `stable` atual antes de sobrescrevê-la; após o deploy, valida com
+  healthcheck — se passar, promove a versão a `stable`; se falhar, **reimplanta
+  automaticamente** a `stable` anterior (rollback) e falha o job de propósito, sinalizando que
+  o deploy não foi bem-sucedido mesmo com o serviço restaurado
 
 ## Por que esse desenho
 
-- Cobre os três conceitos centrais do tema (CI, Delivery, Deployment) de forma **separada e demonstrável**, não misturada
-- Full-stack com jobs paralelos e path filtering mostra domínio de pipeline mais avançado que um pipeline linear simples
-- Múltiplas camadas de teste (unitário, integração, E2E) atende diretamente ao critério de "qualidade técnica do experimento" da avaliação
-- Segurança (auditoria de dependências e scan de imagem) e eficiência (cache, estratégia de tags) entraram como conteúdo genuíno de pipeline — substituindo tasks que inicialmente seriam "escrever a aplicação", fora do foco do trabalho
-- Escopo foi calibrado para ser **executável por um grupo de 7 pessoas em um semestre** sem comprometer a qualidade
+- Cobre os três conceitos centrais do tema (CI, Delivery, Deployment) de forma **separada e
+  demonstrável**, não misturada
+- Full-stack com jobs paralelos e path filtering mostra domínio de pipeline mais avançado que
+  um pipeline linear simples
+- Múltiplas camadas de teste (unitário, integração, E2E) atende diretamente ao critério de
+  "qualidade técnica do experimento" da avaliação
+- Segurança (auditoria de dependências e scan de imagem) e eficiência (cache, estratégia de
+  tags) entraram como conteúdo genuíno de pipeline — substituindo tasks que inicialmente
+  seriam "escrever a aplicação", fora do foco do trabalho
+- Escopo foi calibrado para ser **executável por um grupo de 7 pessoas em um semestre** sem
+  comprometer a qualidade

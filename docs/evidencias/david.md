@@ -51,7 +51,7 @@ troca indevida de `>=` por `>` nos limites das regras.
 
 [PR #27 — test: cobre regras de desconto e limite do backend](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/pull/27)
 
-![PR #27 mergeado com os commits dos testes e ferramentas de qualidade](evidencias/david/D2-01-pr27-mergeado.png)
+![PR #27 mergeado com os commits dos testes e ferramentas de qualidade](david/D2-01-pr27-mergeado.png)
 
 O print registra o PR #27 mergeado em `develop` a partir da branch `feat/ci-backend`,
 com dois commits. A própria descrição do PR registra a validação local realizada na
@@ -63,7 +63,7 @@ Essa é a principal evidência de autoria da implementação dos testes da issue
 
 [Backend quality gate aprovado no GitHub Actions](https://github.com/lfariazzz/automated_tests_CI_CD_pipelines/actions/runs/31920972053/job/95100685002)
 
-![Backend quality gate executando os testes e validando a cobertura](evidencias/david/D2-02-quality-gate-verde.png)
+![Backend quality gate executando os testes e validando a cobertura](david/D2-02-quality-gate-verde.png)
 
 O log comprova que os testes do backend passaram a fazer parte da execução automática
 do CI. Na execução registrada:
