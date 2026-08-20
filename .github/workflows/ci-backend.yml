@@ -104,16 +104,33 @@ jobs:
           --format json
           --output pip-audit-report.json
 
+      - name: Configurar Docker Buildx
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: docker/setup-buildx-action@v3
+
+      - name: Definir tag da imagem
+        if: steps.changes.outputs.backend == 'true' && always()
+        id: image_tag
+        shell: bash
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
       - name: Construir imagem Docker do backend
         if: steps.changes.outputs.backend == 'true' && always()
-        run: docker build --tag checkout-backend:${{ github.sha }} ./backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          tags: checkout-backend:${{ steps.image_tag.outputs.tag }}
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Analisar imagem Docker com Trivy
         if: steps.changes.outputs.backend == 'true' && always()
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
-          image-ref: checkout-backend:${{ github.sha }}
+          image-ref: checkout-backend:${{ steps.image_tag.outputs.tag }}
           format: table
           severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
           vuln-type: os,library
@@ -124,7 +141,7 @@ jobs:
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           scan-type: image
-          image-ref: checkout-backend:${{ github.sha }}
+          image-ref: checkout-backend:${{ steps.image_tag.outputs.tag }}
           format: json
           output: trivy-report.json
           severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
