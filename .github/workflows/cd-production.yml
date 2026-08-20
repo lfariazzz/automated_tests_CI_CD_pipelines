@@ -1,0 +1,119 @@
+name: CD Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Tag de versao a implantar em producao (ex: v1.3.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: cd-production-${{ github.workflow }}
+  cancel-in-progress: false
+
+env:
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/checkout-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/checkout-frontend
+
+jobs:
+  deploy-production:
+    name: Deploy em producao
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v6
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Guardar imagens estaveis atuais (para rollback)
+        id: previous_stable
+        shell: bash
+        run: |
+          if docker pull "${{ env.BACKEND_IMAGE }}:stable" && docker pull "${{ env.FRONTEND_IMAGE }}:stable"; then
+            docker tag "${{ env.BACKEND_IMAGE }}:stable" rollback-backend:local
+            docker tag "${{ env.FRONTEND_IMAGE }}:stable" rollback-frontend:local
+            echo "available=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy da nova versao
+        env:
+          BACKEND_IMAGE_REF: ${{ env.BACKEND_IMAGE }}:${{ inputs.version }}
+          FRONTEND_IMAGE_REF: ${{ env.FRONTEND_IMAGE }}:${{ inputs.version }}
+        run: docker compose -f docker-compose.staging.yml up --detach
+
+      - name: Aguardar backend saudavel
+        id: healthcheck_backend
+        shell: bash
+        continue-on-error: true
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Aguardar frontend disponivel
+        id: healthcheck_frontend
+        shell: bash
+        continue-on-error: true
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5173; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Exibir logs em caso de falha no healthcheck
+        if: steps.healthcheck_backend.outcome == 'failure' || steps.healthcheck_frontend.outcome == 'failure'
+        run: docker compose -f docker-compose.staging.yml logs --no-color
+
+      - name: Encerrar deploy da nova versao
+        if: always()
+        env:
+          BACKEND_IMAGE_REF: ${{ env.BACKEND_IMAGE }}:${{ inputs.version }}
+          FRONTEND_IMAGE_REF: ${{ env.FRONTEND_IMAGE }}:${{ inputs.version }}
+        run: docker compose -f docker-compose.staging.yml down --volumes
+
+      - name: Promover versao a stable
+        if: steps.healthcheck_backend.outcome == 'success' && steps.healthcheck_frontend.outcome == 'success'
+        run: |
+          docker tag "${{ env.BACKEND_IMAGE }}:${{ inputs.version }}" "${{ env.BACKEND_IMAGE }}:stable"
+          docker tag "${{ env.FRONTEND_IMAGE }}:${{ inputs.version }}" "${{ env.FRONTEND_IMAGE }}:stable"
+          docker push "${{ env.BACKEND_IMAGE }}:stable"
+          docker push "${{ env.FRONTEND_IMAGE }}:stable"
+
+      - name: Rollback para a ultima versao estavel
+        if: >-
+          (steps.healthcheck_backend.outcome == 'failure' || steps.healthcheck_frontend.outcome == 'failure')
+          && steps.previous_stable.outputs.available == 'true'
+        env:
+          BACKEND_IMAGE_REF: rollback-backend:local
+          FRONTEND_IMAGE_REF: rollback-frontend:local
+        run: |
+          docker compose -f docker-compose.staging.yml up --detach
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then break; fi
+            sleep 2
+          done
+          docker compose -f docker-compose.staging.yml down --volumes
+
+      - name: Falhar o job quando o healthcheck nao passou
+        if: steps.healthcheck_backend.outcome == 'failure' || steps.healthcheck_frontend.outcome == 'failure'
+        run: |
+          echo "Deploy de ${{ inputs.version }} falhou no healthcheck. Rollback executado (se havia versao estavel anterior)."
+          exit 1
