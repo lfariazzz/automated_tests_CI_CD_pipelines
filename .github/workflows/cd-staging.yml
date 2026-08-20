@@ -1,0 +1,105 @@
+name: CD Staging
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: cd-staging-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  BACKEND_IMAGE: ghcr.io/${{ github.repository_owner }}/checkout-backend
+  FRONTEND_IMAGE: ghcr.io/${{ github.repository_owner }}/checkout-frontend
+
+jobs:
+  deploy-staging:
+    name: Deploy em staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v6
+
+      - name: Login no GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configurar Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Definir tags da imagem
+        id: image_tag
+        shell: bash
+        run: |
+          echo "sha_tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "version_tag=${GITHUB_REF_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Build e push da imagem do backend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+            ${{ env.BACKEND_IMAGE }}:${{ steps.image_tag.outputs.version_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build e push da imagem do frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend
+          push: true
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+            ${{ env.FRONTEND_IMAGE }}:${{ steps.image_tag.outputs.version_tag }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Subir staging com as imagens publicadas
+        env:
+          BACKEND_IMAGE_REF: ${{ env.BACKEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+          FRONTEND_IMAGE_REF: ${{ env.FRONTEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+        run: docker compose -f docker-compose.staging.yml up --detach
+
+      - name: Aguardar backend saudavel
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:8000/health; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Aguardar frontend disponivel
+        shell: bash
+        run: |
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:5173; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+
+      - name: Exibir logs dos servicos em caso de falha
+        if: failure()
+        env:
+          BACKEND_IMAGE_REF: ${{ env.BACKEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+          FRONTEND_IMAGE_REF: ${{ env.FRONTEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+        run: docker compose -f docker-compose.staging.yml logs --no-color
+
+      - name: Encerrar staging
+        if: always()
+        env:
+          BACKEND_IMAGE_REF: ${{ env.BACKEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+          FRONTEND_IMAGE_REF: ${{ env.FRONTEND_IMAGE }}:${{ steps.image_tag.outputs.sha_tag }}
+        run: docker compose -f docker-compose.staging.yml down --volumes

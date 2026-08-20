@@ -1,0 +1,161 @@
+name: CI Backend
+
+on:
+  push:
+    branches:
+      - develop
+      - main
+    paths:
+      - "backend/**"
+      - ".github/workflows/ci-backend.yml"
+  pull_request:
+    branches:
+      - develop
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-backend-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  quality-gate:
+    name: Backend quality gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Detectar alteracoes do backend
+        id: changes
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          elif git diff --quiet \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}" \
+            -- backend .github/workflows/ci-backend.yml; then
+            echo "backend=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "backend=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Configurar Python
+        if: steps.changes.outputs.backend == 'true'
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Instalar dependencias
+        if: steps.changes.outputs.backend == 'true'
+        working-directory: backend
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Executar lint
+        if: steps.changes.outputs.backend == 'true'
+        working-directory: backend
+        run: python -m ruff check .
+
+      - name: Executar testes e quality gate de cobertura
+        if: steps.changes.outputs.backend == 'true'
+        working-directory: backend
+        run: >-
+          python -m pytest
+          --cov=app
+          --cov-report=term-missing
+          --cov-report=xml
+          --cov-fail-under=75
+
+      - name: Publicar relatorio de cobertura
+        if: >-
+          steps.changes.outputs.backend == 'true' &&
+          !cancelled() &&
+          hashFiles('backend/coverage.xml') != ''
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-coverage-${{ github.sha }}
+          path: backend/coverage.xml
+          if-no-files-found: error
+          retention-days: 14 
+      - name: Instalar pip-audit
+        if: steps.changes.outputs.backend == 'true' && always()
+        run: python -m pip install pip-audit
+
+      - name: Auditar dependencias Python
+        if: steps.changes.outputs.backend == 'true' && always()
+        continue-on-error: true
+        run: pip-audit -r backend/requirements.txt
+
+      - name: Gerar relatorio JSON do pip-audit
+        if: steps.changes.outputs.backend == 'true' && always()
+        continue-on-error: true
+        run: >
+          pip-audit
+          -r backend/requirements.txt
+          --format json
+          --output pip-audit-report.json
+
+      - name: Configurar Docker Buildx
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: docker/setup-buildx-action@v3
+
+      - name: Definir tag da imagem
+        if: steps.changes.outputs.backend == 'true' && always()
+        id: image_tag
+        shell: bash
+        run: echo "tag=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+
+      - name: Construir imagem Docker do backend
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          tags: checkout-backend:${{ steps.image_tag.outputs.tag }}
+          load: true
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Analisar imagem Docker com Trivy
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: checkout-backend:${{ steps.image_tag.outputs.tag }}
+          format: table
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          vuln-type: os,library
+          exit-code: "0"
+
+      - name: Gerar relatorio JSON do Trivy
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: image
+          image-ref: checkout-backend:${{ steps.image_tag.outputs.tag }}
+          format: json
+          output: trivy-report.json
+          severity: UNKNOWN,LOW,MEDIUM,HIGH,CRITICAL
+          vuln-type: os,library
+          exit-code: "0"
+          skip-setup-trivy: true
+
+      - name: Publicar relatorios de seguranca
+        if: steps.changes.outputs.backend == 'true' && always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: backend-security-${{ github.sha }}
+          path: |
+            pip-audit-report.json
+            trivy-report.json
+          if-no-files-found: warn
+          retention-days: 14          

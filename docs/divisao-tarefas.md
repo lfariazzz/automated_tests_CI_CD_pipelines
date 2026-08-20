@@ -1,19 +1,22 @@
 # Divisão de Tarefas — Backlog do Grupo
 
-Grupo: **Levi, David, Henrique, Carlos, Angelo, Jetro** (6 pessoas). Baseado no desenho descrito no [`README.md`](../README.md).
+Grupo: **Levi, David, Henrique, Carlos, Angelo, Jetro e Malaquias** (7 pessoas). Baseado no desenho descrito no [`README.md`](../README.md).
 
 ## Como este backlog está organizado
 
-- **10 tasks de desenvolvimento** (2 por pessoa, exceto Levi que também tem 2) — são o que conta como participação/esforço de cada um. Calibradas pra ficarem com tamanho e complexidade parecidos entre si.
-- **Tasks soltas** (pré-requisito, documentação, apresentação) — existem, são necessárias, mas **não contam no esforço de ninguém especificamente**. Ficam sem dono até o grupo se autoatribuir, e podem ser divididas em pedacinhos entre quem sobrar tempo.
+- **12 tasks de desenvolvimento**, além da Fase 0 — são o que conta como participação/esforço técnico de cada um. Foram divididas considerando dependências, afinidade e disponibilidade.
+- **Tasks de apoio** (documentação e apresentação) — são necessárias, mas ficam fora do cálculo das tasks técnicas. Cada uma já tem responsáveis definidos nas issues.
 - Cada task segue um template fixo (Contexto / Escopo / Critérios de aceite / Depende de / Domínio) — é assim que vocês vão poder transformar isso direto em Issues do GitHub.
-- **Nenhuma task de desenvolvimento é estritamente bloqueada por outra pessoa terminar primeiro** — o pior caso é alguém trabalhar contra uma versão levemente desatualizada por 1-2 dias, nunca ficar travado esperando. Isso é proposital: com tempo desigual entre vocês, uma cadeia rígida (A precisa que B termine, que precisa que C termine...) quebra o grupo inteiro se uma pessoa atrasar.
+- As **issues do GitHub são a fonte de verdade operacional**. Este documento resume a divisão e deve continuar alinhado a elas quando houver alguma mudança.
+- As dependências estão descritas em cada task. Quando der, o trabalho pode começar em paralelo usando os contratos definidos no README; E2E, quality gate e CD entram naturalmente depois das bases que validam.
 
 ---
 
-## Fase 0 — Pré-requisito (task solta, feita antes das demais)
+## Fase 0 — Pré-requisito
 
 **Esqueleto mínimo + hooks locais**
+
+- **Responsável**: Malaquias
 
 - **Contexto**: antes de existir regra de negócio nenhuma, o grupo precisa de algo rodando pra pipeline validar desde o primeiro commit (é o padrão real de "walking skeleton": monta o esqueleto + automação cedo, depois cada funcionalidade nova já nasce protegida). Como o código da aplicação em si não é o foco do trabalho, as 4 regras de negócio também nascem aqui, geradas com apoio de IA.
 - **Escopo**:
@@ -25,20 +28,23 @@ Grupo: **Levi, David, Henrique, Carlos, Angelo, Jetro** (6 pessoas). Baseado no 
 - **Critérios de aceite**: `docker compose up` sobe os dois serviços; `/health` responde 200; hook local bloqueia commit com erro de lint; as 4 regras existem como funções isoladas e testáveis (não misturadas com a camada HTTP)
 - **Depende de**: nada
 - **Domínio**: fundação (backend + frontend + tooling local)
-- **Sugestão de execução**: feita em par, rápido (não é pra virar um projeto em si) — não conta como task de esforço de ninguém, é pré-requisito
+- **Sugestão de execução**: pode ser feita em par, mas Malaquias é o responsável por consolidar e entregar a task
 
 ---
 
 ## Tasks de desenvolvimento
 
-### David
-**D1 — Segurança de dependências e da imagem Docker**
+### Malaquias
+**M1 — Segurança de dependências e da imagem Docker**
 - **Contexto**: pipeline de CI/CD precisa validar não só que o código funciona, mas que não introduz vulnerabilidades conhecidas — conteúdo genuinamente de Gerência de Configuração/DevSecOps
 - **Escopo**: adicionar step de auditoria de dependências (ex: `pip-audit`) ao workflow de backend; adicionar scan de vulnerabilidade da imagem Docker (ex: Trivy) rodando contra a imagem gerada pelo Dockerfile da Fase 0
 - **Critérios de aceite**: pipeline roda a auditoria e o scan, gerando relatório visível (não precisa bloquear o build no MVP, mas o relatório precisa aparecer no log/artifact do CI)
 - **Depende de**: Fase 0 (Dockerfile básico)
 - **Domínio**: segurança → CI
 
+---
+
+### David
 **D2 — CI: workflow `ci-backend.yml` + quality gate + testes das próprias regras (desconto/limite)**
 - **Contexto**: pipeline de integração contínua do backend, incluindo a validação das 2 regras de desconto e limite de itens (geradas na Fase 0)
 - **Escopo**: testes unitários dessas 2 regras (casos de borda nos limites exatos) + workflow que instala dependências, roda lint e os testes com cobertura, disparado só quando `backend/` muda; falha se cobertura ou lint não passarem
@@ -87,7 +93,7 @@ Grupo: **Levi, David, Henrique, Carlos, Angelo, Jetro** (6 pessoas). Baseado no 
 - **Contexto**: interface que consome a API de pedidos
 - **Escopo**: formulário simples (cliente, item, preço, quantidade) que chama a API e exibe o resumo calculado (subtotal, desconto, frete, imposto, total)
 - **Critérios de aceite**: elementos do formulário com labels/testids acessíveis (necessário pros testes E2E de Jetro); trata erro de validação retornado pela API
-- **Depende de**: Fase 0 (só precisa do contrato da API, documentado no README — não precisa esperar D1/H1 prontos pra começar a UI)
+- **Depende de**: Fase 0 (só precisa do contrato da API, documentado no README — não precisa esperar as demais tasks de CI prontas pra começar a UI)
 - **Domínio**: frontend
 
 **A2 — Testes unitários/componente do frontend**
@@ -133,9 +139,9 @@ Grupo: **Levi, David, Henrique, Carlos, Angelo, Jetro** (6 pessoas). Baseado no 
 
 ---
 
-## Tasks soltas (não contam no esforço — mas têm responsável sugerido)
+## Tasks de apoio (responsáveis definidos nas issues)
 
-Continuam **não contando no cálculo de esforço** (o enunciado exige, mas não competem com as tasks técnicas). Duas coisas diferentes são separadas aqui: **quem escreve o conteúdo** (pode ser mais de uma pessoa, ou todo mundo, quando o conteúdo depende do que cada um construiu) e **quem coordena/consolida** (garante que aconteça e organiza o resultado final).
+Continuam **não contando no cálculo das tasks técnicas**. Duas coisas diferentes são separadas aqui: **quem escreve o conteúdo** (pode ser mais de uma pessoa, ou todo mundo, quando o conteúdo depende do que cada um construiu) e **quem coordena/consolida** (garante que aconteça e organiza o resultado final).
 
 1. **Ligação direta forte e única** — quando o conteúdo depende só do que uma pessoa construiu, fica só com ela (custo marginal baixo)
 2. **Conteúdo distribuído entre todos** — quando o doc precisa de uma peça de cada task pra ficar completo (evidência, referência, ou fala da apresentação), o conteúdo é de todos; só a coordenação/organização final fica com 1-2 pessoas
@@ -145,24 +151,24 @@ Continuam **não contando no cálculo de esforço** (o enunciado exige, mas não
 |---|---|---|---|
 | `docs/como-reproduzir.md` | **Jetro** | — | Único dono: o Compose (J1) é o caminho único de reprodução, cobre backend+frontend juntos — fragmentar entre vários donos não agrega |
 | `README.md` | **David** | — | Único dono, por vocação: doc editorial/estrutural, múltiplos autores deixariam a voz inconsistente |
-| `docs/evidencias.md` | **Todos** (cada um sobe a evidência da própria task: D1, D2, H1, H2, A1, A2, J1, J2, L1, L2) | **Carlos + Levi** | Sem contribuição de todos, a maior parte da pipeline ficaria sem prova de funcionamento; Carlos e Levi coordenam porque já são donos dos dois cenários "estrela" da demo (bug bloqueado, rollback) |
-| `docs/referencias.md` | **Todos** (cada um lista a doc oficial das ferramentas que usou na própria task) | **Angelo** | Ninguém sozinho conhece a documentação de ferramenta usada só por outra pessoa (ex: Playwright é do Jetro, Trivy é do David); mesmo perfil de tarefa que o README (juntar e organizar) — mantém Angelo, que tem as tasks principais mais leves do grupo, com uma solta leve/organizacional |
-| Roteiro da apresentação | **Todos** (cada um traz a explicação da própria task) | **Henrique** | O próprio enunciado exige participação equilibrada de todos na fala; Henrique estrutura a narrativa geral (objetivos → arquitetura → demo → desafios → resultados) |
+| `docs/evidencias.md` | **Todos** (cada um sobe a evidência da própria task) | **Levi + Malaquias** | Sem contribuição de todos, a maior parte da pipeline ficaria sem prova de funcionamento; os coordenadores organizam e conferem o material final |
+| `docs/referencias.md` | **Todos** (cada um lista a documentação oficial das ferramentas que usou na própria task) | **Malaquias** | Cada pessoa conhece melhor as ferramentas que usou; Malaquias consolida tudo num único documento |
+| Roteiro da apresentação | **Todos** (cada um traz a explicação da própria task) | **David** | O próprio enunciado exige participação equilibrada de todos na fala; David estrutura a narrativa geral (objetivos → arquitetura → demo → desafios → resultados) |
 
 - [ ] `docs/como-reproduzir.md` — **Jetro**: pré-requisitos, instalação, como rodar tudo localmente
 - [ ] `README.md` — **David**: manter atualizado (objetivos, estrutura, como navegar)
-- [ ] `docs/evidencias.md` — **Todos** (coordenam: Carlos + Levi): cada um sobe print/log da própria task; inclui o cenário de falha/correção do C1 e o rollback do L2
-- [ ] `docs/referencias.md` — **Todos** (coordena: Angelo): cada um lista as referências das ferramentas que usou; Angelo consolida
-- [ ] Roteiro da apresentação — **Todos** (coordena: Henrique): cada um prepara a fala da própria task; Henrique amarra a narrativa geral
+- [ ] `docs/evidencias.md` — **Todos** (coordenam: Levi + Malaquias): cada um sobe print/log da própria task; inclui o cenário de falha/correção do C1 e o rollback do L2
+- [ ] `docs/referencias.md` — **Todos** (coordena: Malaquias): cada um lista as referências das ferramentas que usou; Malaquias consolida
+- [ ] Roteiro da apresentação — **Todos** (coordena: David): cada um prepara a fala da própria task; David amarra a narrativa geral
 
 ---
 
 ## Por que essa divisão
 
-- **Escrever a aplicação de exemplo não é task de ninguém**: as 4 regras de negócio e os Dockerfiles são gerados por IA e revisados na Fase 0 (solta, não conta esforço) — isso mantém as 10 tasks de desenvolvimento genuinamente dentro do foco de CI/CD, e não de "ser dev da aplicação"
+- **A aplicação de exemplo nasce na Fase 0, sob responsabilidade do Malaquias**: as 4 regras de negócio e os Dockerfiles são gerados com apoio de IA e revisados antes das demais tasks — isso mantém o restante do trabalho focado em CI/CD
 - **Testes das regras de negócio, misturados entre David e Henrique**: em vez de uma pessoa só testar as 4 regras (volume desproporcional em relação às demais tasks), cada um testa as 2 regras que valida na própria task de CI/integração — mantém o tamanho das tasks parecido e ainda assim cobre 100% das regras
 - **Carlos livre pra focar em Quality Gate + o cenário de demonstração do bug**: com o teste das regras redistribuído, a task do Carlos deixou de ser a maior em volume do grupo e virou uma task de configuração/coordenação de pipeline, coerente com o resto
-- **Esforço equivalente**: todo mundo tem exatamente 2 tasks de desenvolvimento, calibradas pra complexidade parecida
+- **Responsabilidades alinhadas às issues**: Malaquias cuida da Fase 0 e da segurança; David fica com o CI e os testes do backend, além da coordenação editorial já atribuída a ele
 - **Domínios não espelhados**: quase ninguém fica preso a um único tipo de atividade — quem mexe em CI também testa, quem faz frontend também testa frontend, etc. A exceção é o Levi, que por pouco tempo disponível pediu pra ficar num domínio só (CD) — mas mesmo assim com 2 tasks do mesmo peso das dos outros, não uma versão "menor"
-- **Sem gargalo sequencial forte**: nenhuma task de desenvolvimento trava esperando outra pessoa terminar 100% — na pior hipótese (E2E do Jetro, CD do Levi) o trabalho começa "um passo depois", nunca fica bloqueado
+- **Dependências visíveis**: E2E, quality gate e CD começam um passo depois das bases correspondentes; deixar isso explícito ajuda o grupo a organizar a ordem sem criar surpresa no fim
 - **Tasks de documentação separadas do cálculo de esforço**: existem porque o enunciado exige, mas não competem com as tasks técnicas na hora de avaliar quem fez o quê
