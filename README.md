@@ -32,6 +32,9 @@ A divisão completa das tarefas — quem faz o quê, critérios de aceite e depe
 [`docs/divisao-tarefas.md`](docs/divisao-tarefas.md), e o andamento é acompanhado no
 [Project do GitHub](https://github.com/users/lfariazzz/projects/3).
 
+A apresentação do projeto - desenvolvida pelos 7 integrantes da equipe - foi feito por slides no Canva no link abaixo:
+## [Apresentação Pipeline CI/CD](https://canva.link/65933sp1lnq1291)
+
 ## Organização do repositório
 
 ```
